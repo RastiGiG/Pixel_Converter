@@ -97,26 +97,6 @@ enum rgb32masks {
 };
 
 
-/* Function converting hexadecimal chars into integers
- *
- * */
-u8 hex_to_int(char hex_digit) {
-    u8 decimal;
-    if (hex_digit >= '0' && hex_digit <= '9') {
-        decimal = hex_digit - '0';
-    } else if (hex_digit >= 'a' && hex_digit <= 'f') {
-        decimal = hex_digit - 'a' + 10;
-    } else if (hex_digit >= 'A' && hex_digit <= 'F') {
-        decimal = hex_digit - 'A' + 10;
-    } else {
-        fprintf(stderr, "[ERROR]: Invalid hexadecimal digit: %c\n", hex_digit);
-        //exit(1);
-        return 0;
-    }
-
-    return decimal;
-}
-
 /* Convert RGB888 to RGB565
  *
  * */
@@ -345,13 +325,6 @@ int main(int argc, char *argv[])
     u16 rgb565pixel             = 0;
     u8 grayscale_pixel          = 0;
     color_channels rgb888pixel  = {0, 0, 0};
-
-    const char * test = concat_netpbm_header(PPM_MAGIC_NUMBER, 255);
-    // Write header to output
-    printf("Output String:\n");
-    for (int k = 0; k < strlen(test); k++) {
-        printf("%c ", test[k]);
-    } 
     
     if (strcmp(input_file_type, "24bit") == 0) {
         /* Convert from 24bit (RGB888) to 16bit (RGB565) or 8bit Grayscale
