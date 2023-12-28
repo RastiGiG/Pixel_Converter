@@ -40,6 +40,7 @@
  * */
 #define MAX_BUFF_SIZE                1024 * 1024 
 #define NUMBER_OF_CHARS_PER_DIGITS   4 
+#define MAX_PIXEL_VALUE              255
 #define BINARY_WRITE                 "wb"
 #define PBM_MAGIC_NUMBER             "P4"
 #define PGM_MAGIC_NUMBER             "P5"
@@ -189,6 +190,51 @@ u8 rgb888_to_grayscale(color_channels rgb888pixel){
     return grayscale_pixel;
 }
 
+/* Create header for netpbm formats
+ *
+ * */
+const char* concat_netpbm_header(char* netpbm_magic_number, u8 max_pixel_value_per_channel){
+    /* Variables for Netpbm formats
+    *
+    * header_size          -- buffer for number of bytes in header
+    * netpbm_header        -- buffer for netpbm header
+    * width                -- stores image width (needed for netpbm formats)
+    * height               -- stores image height (needed for netpbm formats)
+    * max_pixel_value      -- stores max value per pixel and color channel (needed for netpbm formats)
+    * */
+    u32 width                   = 0;
+    u32 height                  = 0;
+    u8 max_pixel_value          = max_pixel_value_per_channel;
+    usize header_size           = sizeof(char) * 2 // Netpbm Magic Number consists of 2 chars
+        + sizeof(width)
+        + sizeof(height)
+        + sizeof(max_pixel_value)
+        + 3;  // whitespace characters
+    char* netpbm_header = calloc(header_size, sizeof(char));
+
+    // Get dimensions from user, since they cannot be extracted from raw data
+    printf("Enter width: ");
+    scanf("%20u", &width);
+    printf("Enter height: ");
+    scanf("%20u", &height);
+    // printf("Enter max value per color channel per pixel: ");
+    // scanf("%20u", max_pixel_value);
+
+    // Concat variables to header string
+    snprintf(netpbm_header, 
+             header_size, 
+             "%s\n%u %u\n%u", 
+             netpbm_magic_number, 
+             width,
+             height, 
+             max_pixel_value);
+
+    // Header needs to terminate with a single whitespace character (here: '\n')
+    strcat(netpbm_header, "\n");
+
+    return netpbm_header;
+}
+
 
 /*
  * Function to handle file opening and writing
@@ -303,18 +349,19 @@ int main(int argc, char *argv[])
     * rgb565pixel       -- buffer for 16bit pixel; 
     * rgb888pixel       -- buffer for 24bit pixel;
     * grayscale_pixel   -- buffer for 8bit grayscale pixel;
-    * width             -- stores image width (needed for netpbm formats)
-    * height            -- stores image height (needed for netpbm formats)
-    * max_pixel_value   -- stores max value per pixel and color channel (needed for netpbm formats)
     * */
     usize i, j                  = 0;
     u16 rgb565pixel             = 0;
     u8 grayscale_pixel          = 0;
     color_channels rgb888pixel  = {0, 0, 0};
-    u32 width                   = 0;
-    u32 height                  = 0;
-    u16 max_pixel_value         = 255;
 
+    const char * test = concat_netpbm_header(PPM_MAGIC_NUMBER, 255);
+    // Write header to output
+    printf("Output String:\n");
+    for (int k = 0; k < strlen(test); k++) {
+        printf("%c ", test[k]);
+    } 
+    
     if (strcmp(input_file_type, "24bit") == 0) {
         /* Convert from 24bit (RGB888) to 16bit (RGB565) or 8bit Grayscale
          * 
@@ -331,43 +378,11 @@ int main(int argc, char *argv[])
              *
              * */
             if (strcmp(output_format, "pgm") == 0) {
-                /* Variables for Netpbm formats
-                 *
-                 * header_size          -- buffer for number of bytes in header
-                 * netpbm_header        -- buffer for netpbm header
-                 * */
-                usize header_size = sizeof(PGM_MAGIC_NUMBER) 
-                    + sizeof(width)
-                    + sizeof(height)
-                    + sizeof(max_pixel_value)
-                    + 3;  // whitespace characters
-                char netpbm_header[header_size];
-
-                // Get dimensions from user, since they cannot be extracted from raw data
-                printf("Enter width: ");
-                scanf("%20u", &width);
-                printf("Enter height: ");
-                scanf("%20u", &height);
-                // printf("Enter max value per color channel per pixel: ");
-                // scanf("%20u", max_pixel_value);
-                
-                // Concat variables to header string
-                snprintf(netpbm_header, 
-                         sizeof(netpbm_header), 
-                         "%s\n%u %u\n%u", 
-                         PGM_MAGIC_NUMBER, 
-                         width,
-                         height, 
-                         max_pixel_value);
-                // Write header to output
-                for (j = 0; j < sizeof(netpbm_header); j++) {
+                const char * netpbm_header = concat_netpbm_header(PGM_MAGIC_NUMBER, MAX_PIXEL_VALUE);
+                for (j = 0; j < strlen(netpbm_header); j++) {
                     output_data[j] = netpbm_header[j];
-                    output_file_size += sizeof(netpbm_header); 
+                    output_file_size += strlen(netpbm_header);
                 } 
-                
-                // Header needs to terminate with a single whitespace character (here: '\n')
-                output_data[j++] = '\n';
-                output_file_size++;
             }
 
             //convert the input buffer to binary
@@ -380,6 +395,9 @@ int main(int argc, char *argv[])
 
                 output_data[i] = grayscale_pixel;
             }        
+        } else if (strcmp(output_format, "rgb888") == 0) {
+            printf("Output format '%s' matches specified input format '%s'. Nothing to do.", output_format, input_file_type);
+            exit(0);
         } else {
             /* Convert to 16bit rgb (RGB565)
              *
@@ -405,51 +423,22 @@ int main(int argc, char *argv[])
         u16* input_data         = input_buffer;
         u8* output_data         = output_buffer;
 
+        // Convert to grayscale as required
         if (b_grayscale) {
             /* Convert to 8bit Grayscale
              *
              * */ 
             output_file_size        = file_size * (sizeof(u8)) / sizeof(u16);
            
-            // Add pgm header as required
+            /* Add pgm header as required
+             *
+             * */
             if (strcmp(output_format, "pgm") == 0) {
-                /* Variables for Netpbm formats
-                 *
-                 * header_size          -- buffer for number of bytes in header
-                 * netpbm_header        -- buffer for netpbm header
-                 * */
-                usize header_size = sizeof(PGM_MAGIC_NUMBER) 
-                    + sizeof(width)
-                    + sizeof(height)
-                    + sizeof(max_pixel_value)
-                    + 3;  // whitespace characters
-                char netpbm_header[header_size];
-
-                // Get dimensions from user, since they cannot be extracted from raw data
-                printf("Enter width: ");
-                scanf("%20u", &width);
-                printf("Enter height: ");
-                scanf("%20u", &height);
-                // printf("Enter max value per color channel per pixel: ");
-                // scanf("%20u", max_pixel_value);
-
-                // Concat variables to header string
-                snprintf(netpbm_header, 
-                         sizeof(netpbm_header), 
-                         "%s\n%u %u\n%u", 
-                         PGM_MAGIC_NUMBER, 
-                         width,
-                         height, 
-                         max_pixel_value);
-                // Write header to output
-                for (j = 0; j < sizeof(netpbm_header); j++) {
+                const char * netpbm_header = concat_netpbm_header(PGM_MAGIC_NUMBER, MAX_PIXEL_VALUE);
+                for (j = 0; j < strlen(netpbm_header); j++) {
                     output_data[j] = netpbm_header[j];
-                    output_file_size += sizeof(netpbm_header); 
-                }
-
-                // Header needs to terminate with a single whitespace character (here: '\n')
-                output_data[j++] = '\n';
-                output_file_size++;
+                    output_file_size += strlen(netpbm_header);
+                } 
             }
             
             //convert the input buffer to right format and store it to output buffer
@@ -462,51 +451,26 @@ int main(int argc, char *argv[])
                 rgb888pixel.red = 0;
                 rgb888pixel.green = 0;
                 rgb888pixel.blue = 0;
-            }        
+            }
+        // If output format equals input format, do nothing
+        } else if (strcmp(output_format, "rgb565") == 0) {
+            printf("Output format '%s' matches specified input format '%s'. Nothing to do.", output_format, input_file_type);
+            exit(0);
         } else {
             /* Convert to 24bit rgb (RGB888)
              *
              * */
             output_file_size        = file_size * (sizeof(u8) * 3) / sizeof(u16);
 
+            /* Add ppm header as required
+             *
+             * */
             if (strcmp(output_format, "ppm") == 0) {
-                /* Variables for Netpbm formats
-                 *
-                 * header_size          -- buffer for number of bytes in header
-                 * netpbm_header        -- buffer for netpbm header
-                 * */
-                usize header_size = sizeof(PPM_MAGIC_NUMBER) 
-                    + sizeof(width)
-                    + sizeof(height)
-                    + sizeof(max_pixel_value)
-                    + 3;  // whitespace characters
-                char netpbm_header[header_size];
-
-                // Get dimensions from user, since they cannot be extracted from raw data
-                printf("Enter width: ");
-                scanf("%20u", &width);
-                printf("Enter height: ");
-                scanf("%20u", &height);
-                // printf("Enter max value per color channel per pixel: ");
-                // scanf("%20u", max_pixel_value);
-
-                // Concat variables to header string
-                snprintf(netpbm_header, 
-                         sizeof(netpbm_header), 
-                         "%s\n%u %u\n%u", 
-                         PPM_MAGIC_NUMBER, 
-                         width,
-                         height, 
-                         max_pixel_value);
-                // Write header to output
-                for (j = 0; j < sizeof(netpbm_header); j++) {
+                const char * netpbm_header = concat_netpbm_header(PPM_MAGIC_NUMBER, MAX_PIXEL_VALUE);
+                for (j = 0; j < strlen(netpbm_header); j++) {
                     output_data[j] = netpbm_header[j];
-                    output_file_size += sizeof(netpbm_header); 
-                }
-
-                // Header needs to terminate with a single whitespace character (here: '\n')
-                output_data[j++] = '\n';
-                output_file_size++;
+                    output_file_size += strlen(netpbm_header);
+                } 
             }
 
             //convert the input buffer to binary
