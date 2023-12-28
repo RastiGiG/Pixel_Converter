@@ -325,7 +325,11 @@ int main(int argc, char *argv[])
     u16 rgb565pixel             = 0;
     u8 grayscale_pixel          = 0;
     color_channels rgb888pixel  = {0, 0, 0};
-    
+
+    /************************************************************************************
+     * Conversion from 24 bit rgb (RGB888)
+     *
+     * */
     if (strcmp(input_file_type, "24bit") == 0) {
         /* Convert from 24bit (RGB888) to 16bit (RGB565) or 8bit Grayscale
          * 
@@ -362,7 +366,7 @@ int main(int argc, char *argv[])
         } else if (strcmp(output_format, "rgb888") == 0) {
             printf("Output format '%s' matches specified input format '%s'. Nothing to do.", output_format, input_file_type);
             exit(0);
-        } else {
+        } else if (strcmp(output_format, "rgb565") == 0) { 
             /* Convert to 16bit rgb (RGB565)
              *
              * */
@@ -378,8 +382,14 @@ int main(int argc, char *argv[])
 
                 output_data[i] = rgb565pixel;
             }        
+        } else {
+            printf("No valid output format was specified. Input was '%s'\n", output_format);
+            exit(1);
         }
-    
+    /************************************************************************************
+     * Conversion from 16 bit rgb (RGB565)
+     *
+     * */ 
     } else if (strcmp(input_file_type, "16bit") == 0) {
         /* Convert from 16bit (RGB565) to 24bit (RGB888) or 8bit Grayscale
          * 
@@ -420,7 +430,8 @@ int main(int argc, char *argv[])
         } else if (strcmp(output_format, "rgb565") == 0) {
             printf("Output format '%s' matches specified input format '%s'. Nothing to do.", output_format, input_file_type);
             exit(0);
-        } else {
+        } else if (strcmp(output_format, "rgb888") == 0 ||
+        strcmp(output_format, "ppm") == 0) { 
             /* Convert to 24bit rgb (RGB888)
              *
              * */
@@ -447,7 +458,10 @@ int main(int argc, char *argv[])
                 rgb888pixel.green = 0;        // Reset used colors
                 output_data[j++] = rgb888pixel.blue;
                 rgb888pixel.blue = 0;        // Reset used colors
-            }        
+            }
+        } else {
+            printf("No valid output format was specified. Input was '%s'\n", output_format);
+            exit(1);
         }
     } else {
         fprintf(stderr, "Wrong file type specified. Needs to be '16bit' or '24bit'"); 
