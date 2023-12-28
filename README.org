@@ -5,6 +5,10 @@
 This program can convert image data from a 16-bit RGB variant (RGB565) to a 24-bit RGB (RGB888) variant or to 8-bit Grayscale and vice versa.
 It also supports some Netpbm formats like PBM, PGM, PPM.
 
+The code is not optimized, nor is it meant to be perfect. It is mainly used as learning opportunity and for testing.
+
+Use it at your own risk.
+
 :CAUTION:
 It currently does NOT support images with alpha channels.
 :END:
