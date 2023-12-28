@@ -1,5 +1,5 @@
 /**************************************************************************
- * COLOR CONVERTER V 1.0 
+ * PIXEL CONVERTER V 1.0 
  * ------------------------------------------------------------------------
  * Copyright (c) 2023-2024 RastiGiG <randomly.ventilates@simplelogin.co>
  * 
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 /* Macros
  *
@@ -40,7 +41,9 @@
 #define MAX_BUFF_SIZE                1024 * 1024 
 #define NUMBER_OF_CHARS_PER_DIGITS   4 
 #define BINARY_WRITE                 "wb"
-
+#define PBM_MAGIC_NUMBER             "P4"
+#define PGM_MAGIC_NUMBER             "P5"
+#define PPM_MAGIC_NUMBER             "P6"
 
 /* Type declarations
  *
@@ -243,14 +246,23 @@ usize file_open_and_read (char *filepath, u8* buffer){
  * */
 int main(int argc, char *argv[])
 {
-    if (argc != 4){
-        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit>\n", argv[0]);
+    if (argc <= 3 || argc > 5){
+        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit> <netpbm format: none|pbm|pgm|ppm>\n", argv[0]);
         exit(0);
     }
 
+    /* Input variables
+     *
+     * read_filepath        -- path to input file
+     * write_filepath       -- path to output file
+     * input_file_type      -- specify file type of input file (rgb565/16bit or rgb888/24bit)
+     * netpbm_format        -- specify weither and which netpbm file format to use for the output
+     * */
     char *read_filepath = argv[1];
     char *write_filepath = argv[2];
     char *input_file_type = argv[3];
+    char* netpbm_format = argv[4];
+    
     void* input_buffer = calloc(MAX_BUFF_SIZE, sizeof(char));
     void* output_buffer = calloc(MAX_BUFF_SIZE, sizeof(u8));
 
@@ -290,9 +302,43 @@ int main(int argc, char *argv[])
         /* Convert from 16bit (RGB565) to 24bit (RGB888)
          * 
         * */
-        u16* input_data = input_buffer;
-        u8* output_data = output_buffer; 
-        output_file_size = file_size * (sizeof(u8) * 3) / sizeof(u16);
+        u16* input_data         = input_buffer;
+        u8* output_data         = output_buffer;
+        output_file_size        = file_size * (sizeof(u8) * 3) / sizeof(u16);
+        u32 width = 0;
+        u32 height = 0;
+        u16 max_pixel_value = 255;
+        usize header_size       = sizeof(PPM_MAGIC_NUMBER) 
+            + sizeof(width)
+            + sizeof(height)
+            + sizeof(max_pixel_value)
+            + 3;  // whitespace characters
+        char netpbm_header[header_size];
+        
+        if (strcmp(netpbm_format, "ppm") == 0) {
+            printf("Enter width: ");
+            scanf("%20u", &width);
+            printf("Enter height: ");
+            scanf("%20u", &height);
+            // printf("Enter max value per color channel per pixel: ");
+            // scanf("%20u", max_pixel_value);
+            snprintf(netpbm_header, 
+                     sizeof(netpbm_header), 
+                     "%s\n%u %u\n%u", 
+                     PPM_MAGIC_NUMBER, 
+                     width,
+                     height, 
+                     max_pixel_value);
+            // Write header to output
+            for (j = 0; j < sizeof(netpbm_header); j++) {
+                output_data[j] = netpbm_header[j];
+                output_file_size += sizeof(netpbm_header);
+            }
+            // Header needs to terminate with a single whitespace character (here: '\n')
+            output_data[j++] = '\n';
+            output_file_size++;
+        }
+
         //convert the input buffer to binary
         for (i = 0; i < file_size * sizeof(u16) / sizeof(u8); i++) {
             rgb888pixel = rgb565_to_rgb888(input_data[i]);
