@@ -37,11 +37,18 @@
 
 /* Macros
  *
+ * MAX_BUFF_SIZE                        -- Limits the amount of bytes for the input file
+ * MAX_PIXEL_VALUE                      -- Max value a pixel can have (for netpbm formats)
+ * BINARY_WRITE                         -- String representing binary write flag
+ * BINARY_READ                          -- String representing binary read flag
+ * PBM_MAGIC_NUMBER                     -- Magic number representing pbm file in netpbm header
+ * PGM_MAGIC_NUMBER                     -- Magic number representing pgm file in netpbm header
+ * PPM_MAGIC_NUMBER                     -- Magic number representing ppm file in netpbm header
  * */
 #define MAX_BUFF_SIZE                1024 * 1024 
-#define NUMBER_OF_CHARS_PER_DIGITS   4 
 #define MAX_PIXEL_VALUE              255
 #define BINARY_WRITE                 "wb"
+#define BINARY_READ                  "rb"
 #define PBM_MAGIC_NUMBER             "P4"
 #define PGM_MAGIC_NUMBER             "P5"
 #define PPM_MAGIC_NUMBER             "P6"
@@ -108,22 +115,6 @@ u8 hex_to_int(char hex_digit) {
     }
 
     return decimal;
-}
-
-/* 
- *
- *
-*/
-u16 concat_digits(char *hex_digits) {
-    u16 output_number = 0;
-    for (int i = 0; i < NUMBER_OF_CHARS_PER_DIGITS; i++) {
-        if ((hex_digits[i] >= 'A' && hex_digits[i] <= 'F') 
-            || (hex_digits[i] >= 'a' && hex_digits[i] <= 'f') 
-            || (hex_digits[i] > '0' && hex_digits[i] <= '9')) {
-            output_number |= hex_to_int(hex_digits[i]) << (12 - i*4);
-        } 
-    }
-    return output_number;
 }
 
 /* Convert RGB888 to RGB565
