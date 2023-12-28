@@ -1,2 +1,27 @@
-This program can convert RAW image data from a 16-bit RGB variant (RGB565) to a 24-bit RGB (RGB888) variant and vice versa.
+#+TITLE: Pixel Converter
+
+* Short Description
+
+This program can convert image data from a 16-bit RGB variant (RGB565) to a 24-bit RGB (RGB888) variant or to 8-bit Grayscale and vice versa.
+It also supports some Netpbm formats like PBM, PGM, PPM.
+
+:CAUTION:
 It currently does NOT support images with alpha channels.
+:END:
+
+* Roadmap
+
+State of currently supported and planned conversions
+
+| Source     | Target     | State |
+|------------+------------+-------|
+| RAW RGB565 | RAW RGB888 | Done  |
+| RAW RGB565 | PPM        | Done  |
+| RAW RGB565 | PGM        | Done  |
+| RAW RGB888 | RAW RGB565 | Done  |
+| RAW RGB888 | PPM        | Done  |
+| RAW RGB888 | PGM        | Done  |
+| PPM        | PGM        | Todo  |
+| PPM        | RAW RGB888 | Todo  |
+| PPM        | RAW RGB565 | Todo  |
+|------------+------------+-------|
