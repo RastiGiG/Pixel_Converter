@@ -24,6 +24,13 @@
  *
  ***********************************************************************/
 
+/* TODOS
+ *
+ * @todo: Add conversion ppm -> rgb888
+ * @todo: Add conversion ppm -> rgb565
+ * @todo: Add conversion ppm -> pgm
+ * */
+
 /* Libraries
  *
  * */
