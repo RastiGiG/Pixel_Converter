@@ -1,0 +1,36 @@
+BINARY_READ	src/pixel_converter.c	59
+BINARY_WRITE	src/pixel_converter.c	58
+MAX_BUFF_SIZE	src/pixel_converter.c	56
+MAX_PIXEL_VALUE	src/pixel_converter.c	57
+Mpixel_converter	src/pixel_converter.c	/^int main(int argc, char *argv[])$/
+PBM_MAGIC_NUMBER	src/pixel_converter.c	60
+PGM_MAGIC_NUMBER	src/pixel_converter.c	61
+PPM_MAGIC_NUMBER	src/pixel_converter.c	62
+blue	src/pixel_converter.c	80
+blueMask	src/pixel_converter.c	92
+blueMask32	src/pixel_converter.c	104
+blueMax	src/pixel_converter.c	98
+color_channels	src/pixel_converter.c	81
+concat_netpbm_header	src/pixel_converter.c	/^const char* concat_netpbm_header(char* netpbm_magi/
+file_open_and_read	src/pixel_converter.c	/^usize file_open_and_read (char *filepath, u8* buff/
+file_open_and_write	src/pixel_converter.c	/^usize file_open_and_write (char *filepath, void * /
+find_end_of_header	src/pixel_converter.c	/^usize find_end_of_header(char* input_string, u8 ma/
+green	src/pixel_converter.c	79
+greenMask	src/pixel_converter.c	91
+greenMask32	src/pixel_converter.c	103
+greenMax	src/pixel_converter.c	97
+red	src/pixel_converter.c	78
+redMask	src/pixel_converter.c	90
+redMask32	src/pixel_converter.c	102
+redMax	src/pixel_converter.c	96
+rgb32_to_rgb565	src/pixel_converter.c	/^u16 rgb32_to_rgb565(u32 rgb32bit) {$/
+rgb32masks	src/pixel_converter.c	101
+rgb565_to_rgb888	src/pixel_converter.c	/^color_channels rgb565_to_rgb888(u16 rgb16bit) {$/
+rgb565masks	src/pixel_converter.c	89
+rgb565max	src/pixel_converter.c	95
+rgb888_to_grayscale	src/pixel_converter.c	/^u8 rgb888_to_grayscale(color_channels rgb888pixel)/
+rgb888_to_rgb565	src/pixel_converter.c	/^u16 rgb888_to_rgb565(color_channels rgb888pixel) {/
+u16	src/pixel_converter.c	74
+u32	src/pixel_converter.c	75
+u8	src/pixel_converter.c	73
+usize	src/pixel_converter.c	72
