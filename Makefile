@@ -16,20 +16,20 @@ release: clean
 release: $(BIN)
 
 $(BIN): $(OBJS)
-$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c $(SRC)/%.h
-$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.c
-$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ):
-mkdir $@
+	mkdir $@
 
 $(BINDIR):
-mkdir $@
+	mkdir $@
 
 
 clean: 
-$(RM) -r $(BINDIR) $(OBJ)
+	$(RM) -r $(BINDIR) $(OBJ)
