@@ -7,8 +7,8 @@
 *.pdf
 
 #########################################
-### Compiled binary
-pixel_converter
+### Compiled binaries
+bin/
 
 #########################################
 ### Data Files
@@ -21,6 +21,7 @@ pixel_converter
 *.pgm
 *.ppm
 *.pam
+data/
 
 #########################################
 # Prerequisites
@@ -32,6 +33,7 @@ pixel_converter
 *.ko
 *.obj
 *.elf
+obj/
 
 #########################################
 # Linker output
@@ -50,6 +52,7 @@ pixel_converter
 *.a
 *.la
 *.lo
+lib/
 
 #########################################
 # Shared objects (inc. Windows DLLs)

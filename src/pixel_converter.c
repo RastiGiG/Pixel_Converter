@@ -35,6 +35,7 @@
  *
  * */
 #include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -213,6 +214,35 @@ const char* concat_netpbm_header(char* netpbm_magic_number, u8 max_pixel_value_p
     return netpbm_header;
 }
 
+/* Return size of the raw image data
+ *
+ * */
+usize find_end_of_header(char* input_string, u8 max_pixel_value){
+    /* Variables
+     *
+     * search_string_length     -- buffer for length of search string 
+     * search_string            -- buffer for search string
+     * remaining_file_size      -- buffer for size of raw image data
+     * */
+    u32 search_string_length = 20;
+    char search_string[search_string_length];
+    usize remaining_file_size = 0;
+    
+    /* Define search string representing the end of the header file
+     */
+    snprintf(search_string, 
+             search_string_length, 
+             "%u", 
+             max_pixel_value);
+    strcat(search_string, "\n");
+    search_string_length = strlen(search_string); // recalculate search string length
+
+    // Get pointer to beginning of search string to calculate raw image data size
+    char* p_end_of_header = strstr(input_string, search_string);
+    remaining_file_size = strlen(&p_end_of_header[search_string_length]);
+    return remaining_file_size;
+}
+
 
 /*
  * Function to handle file opening and writing
@@ -290,7 +320,7 @@ usize file_open_and_read (char *filepath, u8* buffer){
 int main(int argc, char *argv[])
 {
     if (argc <= 3 || argc > 5){
-        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit> <output format: none|grayscale|rgb565|rgb888|pbm|pgm|ppm>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit|pbm|pgm|ppm> <output format: none|grayscale|rgb565|rgb888|pbm|pgm|ppm>\n", argv[0]);
         exit(0);
     }
 
@@ -301,26 +331,32 @@ int main(int argc, char *argv[])
      * input_file_type      -- specify file type of input file (rgb565/16bit or rgb888/24bit)
      * netpbm_format        -- specify weither and which netpbm file format to use for the output
      * output_file_size     -- determines size of output file
-     * b_grayscale          -- set grayscale output to true/false
+     * b_is_grayscale       -- set grayscale output to true/false
      * */
     char *read_filepath     = argv[1];
     char *write_filepath    = argv[2];
     char *input_file_type   = argv[3];
     char* output_format     = argv[4];
     usize output_file_size  = 0;
-    bool b_grayscale        = false;
+    bool b_is_grayscale     = false;
+    bool b_is_netpbm_format = false;
     
     void* input_buffer = calloc(MAX_BUFF_SIZE, sizeof(char));
     void* output_buffer = calloc(MAX_BUFF_SIZE, sizeof(u8));
 
+    // Read the input file
+    usize file_size = file_open_and_read(read_filepath, input_buffer);
+
     // Set grayscale as required
     if ((strcmp(output_format, "grayscale") == 0) ||
         (strcmp(output_format, "pgm") == 0)) {
-        b_grayscale = true; 
+        b_is_grayscale = true; 
     }
-
-    // Read the input file
-    usize file_size = file_open_and_read(read_filepath, input_buffer);
+    
+    // Set input to netpbm format as required
+    if ((strcmp(input_file_type, "ppm") == 0)) {
+        b_is_netpbm_format = true; 
+    }
 
     /*
     * i, j              -- counter for bytes in input and output file
@@ -337,12 +373,26 @@ int main(int argc, char *argv[])
      * Conversion from 24 bit rgb (RGB888)
      *
      * */
-    if (strcmp(input_file_type, "24bit") == 0) {
+    if ((strcmp(input_file_type, "24bit") == 0) ||
+    strcmp(input_file_type, "ppm") == 0) {
         /* Convert from 24bit (RGB888) to 16bit (RGB565) or 8bit Grayscale
          * 
         * */
         u8* input_data = input_buffer;
-        if (b_grayscale) {
+        usize byte_offset = 0; 
+
+        // Remove header from netpbm format 
+        if (b_is_netpbm_format) {
+            // get size of remaining image
+            printf("before: %lu\n", file_size);
+            usize remaining_file_size = find_end_of_header(input_buffer, MAX_PIXEL_VALUE);
+            byte_offset = file_size - remaining_file_size;
+            file_size = remaining_file_size;
+            j = byte_offset;
+            printf("after: %lu\n", file_size);
+            printf("offset: %lu\n", byte_offset);
+        }
+        if (b_is_grayscale) {
             /* Convert to 8bit Grayscale
              *
              * */
@@ -361,7 +411,7 @@ int main(int argc, char *argv[])
             }
 
             //convert the input buffer to binary
-            for (i = 0; i < output_file_size; i++) {
+            for (i = 0 + byte_offset; i < output_file_size; i++) {
                 rgb888pixel.red = input_data[j++];
                 rgb888pixel.green = input_data[j++];
                 rgb888pixel.blue = input_data[j++];
@@ -370,9 +420,20 @@ int main(int argc, char *argv[])
 
                 output_data[i] = grayscale_pixel;
             }        
-        } else if (strcmp(output_format, "rgb888") == 0) {
+        } else if ((strcmp(output_format, "rgb888") == 0) &&
+        (strcmp(input_file_type, "24bit") == 0)) {
             printf("Output format '%s' matches specified input format '%s'. Nothing to do.", output_format, input_file_type);
             exit(0);
+        } else if ((strcmp(output_format, "rgb888") == 0) &&
+        (strcmp(input_file_type, "ppm") == 0)) {
+            /* Remove netpbm header from image data to turn it into raw rgb888
+             *
+             * */
+            output_file_size = file_size;
+            u8* output_data = output_buffer;
+            for (i = 0; i < file_size; i++){
+                output_data[i] = input_data[i+13];
+            }
         } else if (strcmp(output_format, "rgb565") == 0) { 
             /* Convert to 16bit rgb (RGB565)
              *
@@ -405,7 +466,7 @@ int main(int argc, char *argv[])
         u8* output_data         = output_buffer;
 
         // Convert to grayscale as required
-        if (b_grayscale) {
+        if (b_is_grayscale) {
             /* Convert to 8bit Grayscale
              *
              * */ 
@@ -472,7 +533,7 @@ int main(int argc, char *argv[])
         }
     } else {
         fprintf(stderr, "Wrong file type specified. Needs to be '16bit' or '24bit'"); 
-        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit> <output format: none|grayscale|rgb565|rgb888|pbm|pgm|ppm>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input file> <output file> <input file type: 16bit|24bit|pbm|pgm|ppm> <output format: none|grayscale|rgb565|rgb888|pbm|pgm|ppm>\n", argv[0]);
         exit(1);
     }
 
