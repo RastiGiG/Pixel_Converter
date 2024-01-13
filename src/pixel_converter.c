@@ -130,9 +130,9 @@ color_channels rgb565_to_rgb888(u16 rgb16bit) {
     u8 blue = (u8) (rgb16bit & blueMax);
 
     // Multiplication first to avoid rounding down to 0
-    rgb888pixel.red = round(red * 0xff / redMax);
-    rgb888pixel.green = round(green * 0xff / greenMax);
-    rgb888pixel.blue = round(blue * 0xff / blueMax);
+    rgb888pixel.red = round(red * 0xff * 1.0 / redMax);
+    rgb888pixel.green = round(green * 0xff * 1.0 / greenMax);
+    rgb888pixel.blue = round(blue * 0xff * 1.0 / blueMax);
 
     return rgb888pixel;
 }
